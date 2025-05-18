@@ -17,18 +17,22 @@ A sleek and minimal **Pomodoro timer** to help boost your productivity.
 
 ## Platforms
 
-👉 Website https://hedberatimer.netlify.app/
-👉 Linux .deb download from https://drive.google.com/drive/folders/1hFBfHZGNNzPPEX5seijR-aZLBU5vCB7v?usp=drive_link
-👉 Windows coming soon
-👉 Andriod coming soon
+- 👉 Website https://hedberatimer.netlify.app/
+- 👉 Linux .deb download from https://drive.google.com/drive/folders/1hFBfHZGNNzPPEX5seijR-aZLBU5vCB7v?usp=drive_link
+- 👉 Windows coming soon
+- 👉 Andriod coming soon
 
 ## Project Structure
 
 WebXite/
 │
+
 ├── index.html
+
 └── Elements/
+
     ├── Logo.png
+    
     └── sound.mp3
 
 ### For any query: 
