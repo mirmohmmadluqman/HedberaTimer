@@ -13,7 +13,14 @@ A sleek and minimal **Pomodoro timer** to help boost your productivity.
 
 ## Live Demo
 
-👉 [Visit Live Site](https:Hedbera.netlify.app) or (https:HedberaTimer.netlify.app)
+👉 [Visit Live Site](https:HedberaTimer.netlify.app)
+
+## Platforms
+
+👉 Website https://hedberatimer.netlify.app/
+👉 Linux .deb download from https://drive.google.com/drive/folders/1hFBfHZGNNzPPEX5seijR-aZLBU5vCB7v?usp=drive_link
+👉 Windows coming soon
+👉 Andriod coming soon
 
 ## Project Structure
 
