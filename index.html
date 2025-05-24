@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hedbera Timer</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --color-dark-blue: #0d1b2a;
@@ -17,6 +14,9 @@
       --color-bg: #415a77;
       --color-twitter: #1da1f2;
       --color-gmail: #d14836;
+      --color-accent: #e0e1dd;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      --transition: 0.3s ease;
     }
 
     * {
@@ -55,6 +55,8 @@
       display: flex;
       gap: 1rem;
       margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .mode-buttons button {
@@ -67,25 +69,31 @@
       font-size: 1rem;
       cursor: pointer;
       border-radius: 8px;
-      transition: background-color 0.3s ease;
+      transition: background-color var(--transition), transform var(--transition);
+      min-width: 120px;
     }
 
     .mode-buttons button.active,
     .mode-buttons button:hover {
       background-color: var(--color-grey);
       color: var(--color-bg);
+      transform: scale(1.05);
     }
 
     .timer {
       font-size: 6rem;
       font-weight: bold;
       margin-bottom: 1.5rem;
+      text-align: center;
     }
 
     .controls {
       display: flex;
       gap: 1rem;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 1rem;
     }
 
     .controls button {
@@ -98,23 +106,65 @@
       font-size: 1rem;
       cursor: pointer;
       border-radius: 8px;
-      transition: background-color 0.3s ease;
+      transition: background-color var(--transition), transform var(--transition);
+      min-width: 100px;
     }
 
     .controls button:hover {
       background-color: var(--color-grey);
       color: var(--color-bg);
+      transform: scale(1.05);
+    }
+
+    .controls button:disabled {
+      background-color: #ccc;
+      color: #666;
+      cursor: not-allowed;
+      transform: none;
     }
 
     #total-time {
-      margin-top: 1rem;
-      color: var(--color-grey);
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      background-color: var(--color-light-blue);
+      color: var(--color-white);
       font-weight: bold;
       cursor: pointer;
-      user-select: none;
+      border-radius: 8px;
+      transition: background-color var(--transition);
     }
 
-    /* Social links container */
+    #total-time:hover {
+      background-color: var(--color-grey);
+    }
+
+    .date-picker {
+      margin: 1rem 0;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .date-picker label {
+      font-size: 1rem;
+      color: var(--color-grey);
+    }
+
+    .date-picker input {
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: none;
+      background-color: var(--color-light-blue);
+      color: var(--color-white);
+      font-size: 1rem;
+    }
+
+    #date-time {
+      margin: 0.5rem 0;
+      color: var(--color-grey);
+      font-weight: bold;
+    }
+
     .social-links {
       margin-top: 2rem;
       display: flex;
@@ -130,7 +180,7 @@
       border-radius: 50%;
       background-color: var(--color-light-blue);
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background-color var(--transition);
       text-decoration: none;
     }
 
@@ -151,79 +201,240 @@
     .social-link.gmail:hover svg {
       fill: var(--color-gmail);
     }
+
+    #reportPopup, #settingsPopup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      background-color: var(--color-light-blue);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      transform: translate(-50%, -50%) scale(0.7);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform var(--transition), opacity var(--transition);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    #reportPopup.open, #settingsPopup.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition);
+      z-index: 900;
+    }
+
+    #overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #reportPopup h2, #settingsPopup h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--color-white);
+    }
+
+    #reportPopup pre, #settingsPopup label {
+      color: var(--color-white);
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #settingsPopup label {
+      display: block;
+      margin-top: 0.75rem;
+    }
+
+    #settingsPopup input, #settingsPopup select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      background-color: var(--color-dark-blue);
+      color: var(--color-white);
+    }
+
+    #settingsPopup button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--color-white);
+      color: var(--color-dark-blue);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color var(--transition);
+    }
+
+    #settingsPopup button:hover {
+      background-color: var(--color-grey);
+      color: var(--color-bg);
+    }
+
+    /* Media Queries for Responsiveness */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+      p.subheading {
+        font-size: 1rem;
+        max-width: 90%;
+      }
+      .timer {
+        font-size: 4rem;
+      }
+      .mode-buttons button, .controls button {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+        min-width: 100px;
+      }
+      #reportPopup, #settingsPopup {
+        padding: 0.75rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      p.subheading {
+        font-size: 0.9rem;
+      }
+      .timer {
+        font-size: 3rem;
+      }
+      .mode-buttons button, .controls button {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        min-width: 80px;
+      }
+      #reportPopup, #settingsPopup {
+        width: 95%;
+        padding: 0.5rem;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>Hedbera Timer</h1>
-  <p class="subheading">An online Timer to boost your productivity</p>
+  <p class="subheading">An online timer to boost your productivity</p>
 
   <div class="mode-buttons">
     <button class="active" onclick="setMode('pomodoro')">Pomodoro</button>
     <button onclick="setMode('short')">Short Break</button>
     <button onclick="setMode('long')">Long Break</button>
+    <button onclick="openSettings()">Settings</button>
   </div>
 
   <div class="timer" id="timer">25:00</div>
   <div class="controls">
-    <p id="total-time"></p>
-    <button onclick="startTimer()">Start</button>
-    <button onclick="pauseTimer()">Pause</button>
+    <button id="startBtn" onclick="startTimer()">Start</button>
+    <button id="pauseBtn" onclick="pauseTimer()" disabled>Pause</button>
+    <button id="resumeBtn" onclick="resumeTimer()" disabled>Resume</button>
+    <button id="stopBtn" onclick="stopTimer()" disabled>Stop</button>
   </div>
 
-  <!-- Social Icons -->
+  <div class="date-picker">
+    <label for="dateSelect">View Focus Time for Date:</label>
+    <input type="date" id="dateSelect" onchange="showDateTimeUsed()" />
+  </div>
+  <p id="date-time"></p>
+
+  <p id="total-time" onclick="showFocusBreakdown()">Focused Time: 0 min</p>
+
   <div class="social-links">
-    <a
-      href="https://x.com/MirMohmadLuqman"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="social-link twitter"
-      title="Follow me on X (Twitter)"
-      aria-label="Twitter"
-      ><svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M23.954 4.569c-.885.39-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.95.564-2.005.974-3.127 1.195-.897-.959-2.178-1.559-3.594-1.559-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616v.061c0 2.388 1.697 4.384 3.946 4.832-.734.2-1.512.232-2.224.084.626 1.956 2.444 3.377 4.6 3.415-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.961-.695 1.8-1.562 2.46-2.549z"
-        ></path>
-      </svg></a
-    >
-    <a
-      href="mailto:mirmohmmadluqman@gmail.com"
-      class="social-link gmail"
-      title="Send me an email"
-      aria-label="Gmail"
-      ><svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
-        ></path>
-      </svg></a
-    >
+    <a href="https://x.com/MirMohmadLuqman" target="_blank" rel="noopener noreferrer" class="social-link twitter" title="Follow me on X (Twitter)" aria-label="Twitter">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M23.954 4.569c-.885.39-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.95.564-2.005.974-3.127 1.195-.897-.959-2.178-1.559-3.594-1.559-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616v.061c0 2.388 1.697 4.384 3.946 4.832-.734.2-1.512.232-2.224.084.626 1.956 2.444 3.377 4.6 3.415-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.961-.695 1.8-1.562 2.46-2.549z"></path>
+      </svg>
+    </a>
+    <a href="mailto:mirmohmmadluqman@gmail.com" class="social-link gmail" title="Send me an email" aria-label="Gmail">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"></path>
+      </svg>
+    </a>
   </div>
 
   <audio id="alarm" src="Elements/sound.mp3"></audio>
 
+  <div id="overlay"></div>
+  <div id="reportPopup" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+    <h2 id="reportTitle">Focus Time Report</h2>
+    <pre id="reportContent"></pre>
+    <button onclick="closeReportPopup()">Close</button>
+  </div>
+  <div id="settingsPopup" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <h2 id="settingsTitle">Settings</h2>
+    <label for="pomodoroDuration">Pomodoro Duration (minutes):</label>
+    <input type="number" id="pomodoroDuration" value="25" min="1" />
+    <label for="shortBreakDuration">Short Break Duration (minutes):</label>
+    <input type="number" id="shortBreakDuration" value="5" min="1" />
+    <label for="longBreakDuration">Long Break Duration (minutes):</label>
+    <input type="number" id="longBreakDuration" value="15" min="1" />
+    <label for="reminderInterval">Reminder Interval (minutes):</label>
+    <input type="number" id="reminderInterval" value="0" min="0" placeholder="Set to 0 to disable" />
+    <button onclick="saveSettings()">Save</button>
+    <button onclick="closeSettingsPopup()">Close</button>
+  </div>
+
   <script>
     let timer;
-    let time = 1500;
+    let time = 1500; // Default Pomodoro time in seconds
     let mode = "pomodoro";
     let isRunning = false;
+    let isPaused = false;
+    let durations = {
+      pomodoro: 25 * 60,
+      short: 5 * 60,
+      long: 15 * 60
+    };
+    let reminderInterval = 0;
+    let lastReminderTime = Date.now();
+
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resumeBtn = document.getElementById("resumeBtn");
+    const stopBtn = document.getElementById("stopBtn");
 
     function getTodayKey() {
       const today = new Date();
       return today.toISOString().split("T")[0]; // yyyy-mm-dd
     }
 
-    function getMonthKey() {
-      const now = new Date();
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; // yyyy-mm
+    function getMonthKey(date = new Date()) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; // yyyy-mm
     }
 
-    function getYearKey() {
-      return `${new Date().getFullYear()}`; // yyyy
+    function getYearKey(date = new Date()) {
+      return `${date.getFullYear()}`; // yyyy
+    }
+
+    function getWeekKey(date = new Date()) {
+      const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+      const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+      const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+      return `${date.getFullYear()}-W${String(weekNumber).padStart(2, "0")}`; // yyyy-Www
     }
 
     function updateTimerDisplay() {
-      const minutes = Math.floor(time / 60)
-        .toString()
-        .padStart(2, "0");
+      const minutes = Math.floor(time / 60).toString().padStart(2, "0");
       const seconds = (time % 60).toString().padStart(2, "0");
       document.getElementById("timer").textContent = `${minutes}:${seconds}`;
     }
@@ -232,41 +443,70 @@
       const allData = JSON.parse(localStorage.getItem("focusData")) || {};
       const todayKey = getTodayKey();
       const mins = Math.floor((allData[todayKey] || 0) / 60);
-      document.getElementById("total-time").textContent = `Focused Time: ${mins} min`;
+      document.getElementById("total-time").textContent = `Focused Time Today: ${mins} min`;
     }
 
     function startTimer() {
       if (isRunning) return;
       isRunning = true;
+      isPaused = false;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = false;
       timer = setInterval(() => {
         time--;
         updateTimerDisplay();
+        checkReminder();
         if (time <= 0) {
           clearInterval(timer);
-          document.getElementById("alarm").play();
+          playAlarm();
           isRunning = false;
-          recordFocusTime(1500);
+          recordFocusTime(durations[mode]);
           autoSwitchMode();
         }
       }, 1000);
     }
 
     function pauseTimer() {
+      if (!isRunning || isPaused) return;
       clearInterval(timer);
-      if (isRunning && mode === "pomodoro") {
-        const used = 1500 - time;
+      isRunning = false;
+      isPaused = true;
+      startBtn.disabled = true;
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = false;
+      stopBtn.disabled = false;
+      if (mode === "pomodoro") {
+        const used = durations.pomodoro - time;
         recordFocusTime(used);
       }
+    }
+
+    function resumeTimer() {
+      if (isRunning || !isPaused) return;
+      startTimer();
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
       isRunning = false;
+      isPaused = false;
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = true;
+      time = durations[mode];
+      updateTimerDisplay();
     }
 
     function setMode(newMode) {
       document.querySelectorAll(".mode-buttons button").forEach((btn) => btn.classList.remove("active"));
       event.target.classList.add("active");
       mode = newMode;
-      time = mode === "pomodoro" ? 1500 : mode === "short" ? 300 : 900;
+      time = durations[mode];
       updateTimerDisplay();
-      pauseTimer();
+      stopTimer();
     }
 
     function autoSwitchMode() {
@@ -279,6 +519,13 @@
       }
     }
 
+    function playAlarm() {
+      const alarm = document.getElementById("alarm");
+      alarm.play().catch(() => {
+        console.warn("Audio file not found or playback failed. Ensure 'Elements/sound.mp3' exists.");
+      });
+    }
+
     function recordFocusTime(seconds) {
       if (mode !== "pomodoro") return;
 
@@ -287,10 +534,8 @@
       const monthKey = getMonthKey();
       const yearKey = getYearKey();
 
-      // Update today's data
       data[todayKey] = (data[todayKey] || 0) + seconds;
 
-      // Check for month rollover
       const storedMonth = localStorage.getItem("lastMonthKey");
       if (storedMonth && storedMonth !== monthKey) {
         let monthTotal = 0;
@@ -304,7 +549,6 @@
       }
       localStorage.setItem("lastMonthKey", monthKey);
 
-      // Check for year rollover
       const storedYear = localStorage.getItem("lastYearKey");
       if (storedYear && storedYear !== yearKey) {
         let yearTotal = 0;
@@ -322,26 +566,120 @@
       updateTotalTimeDisplay();
     }
 
+    function showDateTimeUsed() {
+      const dateInput = document.getElementById("dateSelect").value;
+      const data = JSON.parse(localStorage.getItem("focusData")) || {};
+      const mins = Math.floor((data[dateInput] || 0) / 60);
+      document.getElementById("date-time").textContent = `Focus Time on ${dateInput}: ${mins} min`;
+    }
+
     function showFocusBreakdown() {
       const data = JSON.parse(localStorage.getItem("focusData")) || {};
-      let breakdown = "";
+      const now = new Date();
+      let dailyReport = "";
+      let weeklyReport = "";
+      let monthlyReport = "";
+
+      // Daily Report
+      const todayKey = getTodayKey();
+      dailyReport = `📌 Today (${todayKey}): ${Math.floor((data[todayKey] || 0) / 60)} min\n`;
       for (const key in data) {
-        const mins = Math.floor(data[key] / 60);
-        if (key.startsWith("year-")) {
-          breakdown += `🗓️ Year ${key.split("-")[1]}: ${mins} min\n`;
-        } else if (key.startsWith("month-")) {
-          breakdown += `📅 Month ${key.split("-")[1]}: ${mins} min\n`;
-        } else {
-          breakdown += `📌 ${key}: ${mins} min\n`;
+        if (key.includes("-") && !key.startsWith("month-") && !key.startsWith("year-") && key !== todayKey) {
+          dailyReport += `📌 ${key}: ${Math.floor(data[key] / 60)} min\n`;
         }
       }
-      alert(breakdown || "No focus data yet.");
+
+      // Weekly Report
+      const weekData = {};
+      for (const key in data) {
+        if (key.includes("-") && !key.startsWith("month-") && !key.startsWith("year-")) {
+          const date = new Date(key);
+          const weekKey = getWeekKey(date);
+          weekData[weekKey] = (weekData[weekKey] || 0) + (data[key] || 0);
+        }
+      }
+      for (const week in weekData) {
+        weeklyReport += `📅 Week ${week}: ${Math.floor(weekData[week] / 60)} min\n`;
+      }
+
+      // Monthly Report
+      for (const key in data) {
+        if (key.startsWith("month-")) {
+          monthlyReport += `📆 ${key.split("-")[1]}: ${Math.floor(data[key] / 60)} min\n`;
+        }
+      }
+
+      const report = `Daily Breakdown:\n${dailyReport || "No daily data.\n"}\n` +
+                    `Weekly Breakdown:\n${weeklyReport || "No weekly data.\n"}\n` +
+                    `Monthly Breakdown:\n${monthlyReport || "No monthly data.\n"}`;
+      document.getElementById("reportContent").textContent = report;
+      document.getElementById("reportPopup").classList.add("open");
+      document.getElementById("overlay").classList.add("open");
+    }
+
+    function closeReportPopup() {
+      document.getElementById("reportPopup").classList.remove("open");
+      document.getElementById("overlay").classList.remove("open");
+    }
+
+    function openSettings() {
+      document.getElementById("pomodoroDuration").value = durations.pomodoro / 60;
+      document.getElementById("shortBreakDuration").value = durations.short / 60;
+      document.getElementById("longBreakDuration").value = durations.long / 60;
+      document.getElementById("reminderInterval").value = reminderInterval / 60;
+      document.getElementById("settingsPopup").classList.add("open");
+      document.getElementById("overlay").classList.add("open");
+    }
+
+    function closeSettingsPopup() {
+      document.getElementById("settingsPopup").classList.remove("open");
+      document.getElementById("overlay").classList.remove("open");
+    }
+
+    function saveSettings() {
+      durations.pomodoro = parseInt(document.getElementById("pomodoroDuration").value) * 60;
+      durations.short = parseInt(document.getElementById("shortBreakDuration").value) * 60;
+      durations.long = parseInt(document.getElementById("longBreakDuration").value) * 60;
+      reminderInterval = parseInt(document.getElementById("reminderInterval").value) * 60;
+      localStorage.setItem("hedberaSettings", JSON.stringify({ durations, reminderInterval }));
+      time = durations[mode];
+      updateTimerDisplay();
+      closeSettingsPopup();
+      requestNotificationPermission();
+    }
+
+    function requestNotificationPermission() {
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+    }
+
+    function checkReminder() {
+      if (reminderInterval === 0 || !isRunning) return;
+      const now = Date.now();
+      if ((now - lastReminderTime) / 1000 >= reminderInterval) {
+        if (Notification.permission === "granted") {
+          new Notification("Hedbera Timer Reminder", {
+            body: "Keep focused! Take a break if needed.",
+            icon: "https://via.placeholder.com/150"
+          });
+        }
+        lastReminderTime = now;
+      }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+      const savedSettings = JSON.parse(localStorage.getItem("hedberaSettings"));
+      if (savedSettings) {
+        durations = savedSettings.durations;
+        reminderInterval = savedSettings.reminderInterval;
+        time = durations[mode];
+      }
       updateTimerDisplay();
       updateTotalTimeDisplay();
-      document.getElementById("total-time").addEventListener("click", showFocusBreakdown);
+      document.getElementById("dateSelect").value = getTodayKey();
+      showDateTimeUsed();
+      requestNotificationPermission();
     });
   </script>
 </body>
