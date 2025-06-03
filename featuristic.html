@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hedbera Timer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --color-dark-blue: #0d1b2a;
+      --color-light-blue: #1b263b;
+      --color-white: #ffffff;
+      --color-grey: #778da9;
+      --color-bg: #415a77;
+      --color-twitter: #1da1f2;
+      --color-gmail: #d14836;
+      --color-google: #4285f4;
+      --color-accent: #e0e1dd;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      --transition: 0.3s ease;
+      --theme-bg: var(--color-dark-blue);
+      --theme-font: "Rubik", sans-serif;
+      --theme-button-color: var(--color-white);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--theme-font);
+    }
+
+    body {
+      background-color: var(--theme-bg);
+      color: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 2rem;
+      transition: background-color var(--transition);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+    }
+
+    p.subheading {
+      font-size: 1.2rem;
+      color: var(--color-grey);
+      margin-top: 0.5rem;
+    }
+
+    .top-nav {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .top-nav button {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      background-color: var(--color-light-blue);
+      color: var(--color-white);
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color var(--transition), transform var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .top-nav button:hover {
+      background-color: var(--color-grey);
+      transform: scale(1.05);
+    }
+
+    .top-nav button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .top-nav button svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--color-white);
+    }
+
+    .mode-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .mode-buttons button {
+      padding: 0.8rem 2rem;
+      border: none;
+      background-color: var(--color-light-blue);
+      color: var(--color-white);
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color var(--transition), transform var(--transition);
+      min-width: 120px;
+    }
+
+    .mode-buttons button.active,
+    .mode-buttons button:hover {
+      background-color: var(--color-grey);
+      color: var(--color-bg);
+      transform: scale(1.05);
+    }
+
+    .timer-container {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .timer {
+      font-size: 6rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .progress-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .controls button {
+      padding: 0.8rem 2rem;
+      border: none;
+      background-color: var(--theme-button-color);
+      color: var(--color-dark-blue);
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color var(--transition), transform var(--transition);
+      min-width: 100px;
+    }
+
+    .controls button:hover {
+      background-color: var(--color-grey);
+      color: var(--color-bg);
+      transform: scale(1.05);
+    }
+
+    .controls button:disabled {
+      background-color: #ccc;
+      color: #666;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .controls select {
+      padding: 0.8rem;
+      border-radius: 8px;
+      background-color: var(--color-light-blue);
+      color: var(--color-white);
+      font-size: 1rem;
+      border: none;
+    }
+
+    .task-section {
+      margin: 2rem 0;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    .task-section button {
+      padding: 0.8rem 2rem;
+      border: none;
+      background-color: var(--color-light-blue);
+      color: var(--color-white);
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color var(--transition), transform var(--transition);
+    }
+
+    .task-section button:hover {
+      background-color: var(--color-grey);
+      transform: scale(1.05);
+    }
+
+    .task-list {
+      margin-top: 1rem;
+    }
+
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      background-color: var(--color-dark-blue);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      cursor: move;
+    }
+
+    .task-item.completed {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+
+    .task-item button {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+      background-color: var(--theme-button-color);
+      color: var(--color-dark-blue);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .task-item button:hover {
+      background-color: var(--color-grey);
+      color: var(--color-bg);
+    }
+
+    .date-picker {
+      margin: 2rem 0;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .date-picker label {
+      font-size: 1rem;
+      color: var(--color-grey);
+    }
+
+    .date-picker input {
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: none;
+      background-color: var(--color-light-blue);
+      color: var(--color-white);
+      font-size: 1rem;
+    }
+
+    #date-time {
+      margin: 0.5rem 0;
+      color: var(--color-grey);
+      font-weight: bold;
+    }
+
+    #total-time {
+      margin: 2rem 0;
+      padding: 0.5rem 1rem;
+      background-color: var(--color-light-blue);
+      color: var(--color-white);
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color var(--transition);
+    }
+
+    #total-time:hover {
+      background-color: var(--color-grey);
+    }
+
+    .social-links {
+      margin: 2rem 0;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .social-link {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: var(--color-light-blue);
+      cursor: pointer;
+      transition: background-color var(--transition);
+      text-decoration: none;
+    }
+
+    .social-link:hover {
+      background-color: var(--color-grey);
+    }
+
+    .social-link svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--color-white);
+    }
+
+    .social-link.twitter:hover svg {
+      fill: var(--color-twitter);
+    }
+
+    .social-link.gmail:hover svg {
+      fill: var(--color-gmail);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--color-grey);
+      font-size: 0.9rem;
+    }
+
+    .user-info img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      background-color: var(--color-light-blue);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      transform: translate(-50%, -50%) scale(0.7);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform var(--transition), opacity var(--transition);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .popup.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition);
+      z-index: 900;
+    }
+
+    #overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .popup h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--color-white);
+    }
+
+    .popup label {
+      color: var(--color-white);
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .popup input, .popup select, .popup textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      background-color: var(--color-dark-blue);
+      color: var(--color-white);
+    }
+
+    .popup button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--theme-button-color);
+      color: var(--color-dark-blue);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color var(--transition);
+    }
+
+    .popup button:hover {
+      background-color: var(--color-grey);
+      color: var(--color-bg);
+    }
+
+    .report-tabs, .task-tabs, .project-tabs, .collab-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .report-tabs button, .task-tabs button, .project-tabs button, .collab-tabs button {
+      padding: 0.5rem 1rem;
+      background-color: var(--color-dark-blue);
+      color: var(--color-white);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .report-tabs button.active, .task-tabs button.active, .project-tabs button.active, .collab-tabs button.active {
+      background-color: var(--color-grey);
+    }
+
+    .kanban-board {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding: 0.5rem;
+    }
+
+    .kanban-column {
+      background-color: var(--color-dark-blue);
+      padding: 1rem;
+      border-radius: 8px;
+      min-width: 200px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .theme-editor {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .accessibility-checker {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background-color: var(--color-dark-blue);
+      border-radius: 8px;
+    }
+
+    .mobile-widget {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background-color: var(--color-light-blue);
+      padding: 0.5rem;
+      border-radius: 8px;
+      display: none;
+    }
+
+    #focusChart, #heatmapChart {
+      max-height: 200px;
+      margin-bottom: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: var(--color-white);
+    }
+
+    th, td {
+      padding: 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid var(--color-grey);
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 2rem; }
+      p.subheading { font-size: 1rem; max-width: 90%; }
+      .timer { font-size: 4rem; }
+      .mode-buttons button, .controls button, .task-section button {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+        min-width: 100px;
+      }
+      .top-nav button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+      .popup { padding: 0.75rem; }
+      .mobile-widget { display: block; }
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.5rem; }
+      p.subheading { font-size: 0.9rem; }
+      .timer { font-size: 3rem; }
+      .mode-buttons button, .controls button, .task-section button {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        min-width: 80px;
+      }
+      .top-nav button {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+      }
+      .user-info { font-size: 0.8rem; }
+      .user-info img { width: 20px; height: 20px; }
+      .popup { width: 95%; padding: 0.5rem; }
+    }
+
+    [high-contrast] {
+      --color-dark-blue: #000;
+      --color-light-blue: #333;
+      --color-white: #fff;
+      --color-grey: #ccc;
+      --color-bg: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Hedbera Timer</h1>
+    <p class="subheading">An online timer to boost your productivity</p>
+  </div>
+
+  <div class="top-nav">
+    <button id="googleSignInBtn" title="Sign in with Google" aria-label="Google Sign-In">
+      <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.854L12.545,10.239z"/></svg>
+      Sign In
+    </button>
+    <button onclick="showFocusBreakdown()">Report</button>
+    <button onclick="openCollaboration()">Team</button>
+    <button onclick="openIntegrations()">Integrations</button>
+    <button onclick="openGamification()">Achievements</button>
+  </div>
+
+  <div class="mode-buttons">
+    <button class="active" onclick="setMode('pomodoro')">Pomodoro</button>
+    <button onclick="setMode('short')">Short Break</button>
+    <button onclick="setMode('long')">Long Break</button>
+    <button onclick="openSettings()">Settings</button>
+  </div>
+
+  <div class="timer-container">
+    <div class="timer" id="timer">25:00</div>
+    <svg class="progress-circle" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="#ccc" stroke-width="10"/>
+      <circle cx="50" cy="50" r="45" fill="none" stroke="var(--color-grey)" stroke-width="10" stroke-dasharray="283" stroke-dashoffset="0" id="progress"/>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <button id="startBtn" onclick="startTimer()">Start</button>
+    <button id="pauseBtn" onclick="pauseTimer()" disabled>Pause</button>
+    <button id="resumeBtn" onclick="resumeTimer()" disabled>Resume</button>
+    <button id="stopBtn" onclick="stopTimer()" disabled>Stop</button>
+    <button onclick="adjustTimer()">Adjust</button>
+    <select id="timerPreset" onchange="loadTimerPreset()">
+      <option value="">Select Preset</option>
+    </select>
+  </div>
+
+  <div class="task-section">
+    <button onclick="openTasks()">Add Task</button>
+    <div class="task-list" id="taskList"></div>
+  </div>
+
+  <div class="date-picker">
+    <label for="dateSelect">View Focus Time for Date:</label>
+    <input type="date" id="dateSelect" onchange="showDateTimeUsed()" />
+  </div>
+  <p id="date-time"></p>
+
+  <p id="total-time">Focused Time: 0 min</p>
+
+  <div class="social-links">
+    <div id="user-info" class="user-info" style="display: none;">
+      <img id="user-pic" src="" alt="User profile picture" />
+      <span id="user-name"></span>
+    </div>
+    <a href="https://x.com/MirMohmadLuqman" target="_blank" rel="noopener noreferrer" class="social-link twitter" title="Follow me on X (Twitter)" aria-label="Twitter">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.954 4.569c-.885.39-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.95.564-2.005.974-3.127 1.195-.897-.959-2.178-1.559-3.594-1.559-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616v.061c0 2.388 1.697 4.384 3.946 4.832-.734.2-1.512.232-2.224.084.626 1.956 2.444 3.377 4.6 3.415-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.961-.695 1.8-1.562 2.46-2.549z"></path></svg>
+    </a>
+    <a href="mailto:mirmohmmadluqman@gmail.com" class="social-link gmail" title="Send me an email" aria-label="Gmail">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"></path></svg>
+    </a>
+  </div>
+
+  <audio id="alarm" src="/Elements/sound.mp3"></audio>
+
+  <div id="overlay"></div>
+
+  <div id="reportPopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+    <h2 id="reportTitle">Focus Time Report</h2>
+    <div class="report-tabs">
+      <button class="active" onclick="showReportTab('summary')">Summary</button>
+      <button onclick="showReportTab('detail')">Detail</button>
+      <button onclick="showReportTab('ranking')">Ranking</button>
+      <button onclick="showReportTab('heatmap')">Heatmap</button>
+      <button onclick="showReportTab('trends')">Trends</button>
+    </div>
+    <div id="reportContent"></div>
+    <button onclick="exportReport('pdf')">Export PDF</button>
+    <button onclick="exportReport('csv')">Export CSV</button>
+    <button onclick="closeReportPopup()">Close</button>
+  </div>
+
+  <div id="settingsPopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <h2 id="settingsTitle">Settings</h2>
+    <div class="settings-tabs">
+      <button class="active" onclick="showSettingsTab('timer')">Timer</button>
+      <button onclick="showSettingsTab('theme')">Theme</button>
+      <button onclick="showSettingsTab('notifications')">Notifications</button>
+      <button onclick="showSettingsTab('accessibility')">Accessibility</button>
+    </div>
+    <div id="settingsContent">
+      <label for="pomodoroDuration">Pomodoro Duration (minutes):</label>
+      <input type="number" id="pomodoroDuration" value="25" min="1" />
+      <label for="shortBreakDuration">Short Break Duration (minutes):</label>
+      <input type="number" id="shortBreakDuration" value="5" min="1" />
+      <label for="longBreakDuration">Long Break Duration (minutes):</label>
+      <input type="number" id="longBreakDuration" value="15" min="1" />
+      <label for="reminderInterval">Reminder Interval (minutes):</label>
+      <input type="number" id="reminderInterval" value="0" min="0" placeholder="Set to 0 to disable" />
+      <label for="projectName">New Project:</label>
+      <input type="text" id="projectName" placeholder="Enter project name" />
+      <button onclick="addProject()">Add Project</button>
+      <div class="theme-editor" style="display: none;">
+        <label for="themeBg">Background Color:</label>
+        <input type="color" id="themeBg" value="#0d1b2a" />
+        <label for="themeFont">Font:</label>
+        <select id="themeFont">
+          <option value="Rubik">Rubik</option>
+          <option value="Arial">Arial</option>
+          <option value="Times New Roman">Times New Roman</option>
+        </select>
+      </div>
+      <div class="accessibility-checker" style="display: none;">
+        <button onclick="runAccessibilityCheck()">Run Accessibility Check</button>
+      </div>
+    </div>
+    <button onclick="saveSettings()">Save</button>
+    <button id="signOutBtn" onclick="signOut()" style="display: none;">Sign Out</button>
+    <button onclick="closeSettingsPopup()">Close</button>
+  </div>
+
+  <div id="tasksPopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="tasksTitle">
+    <h2 id="tasksTitle">Task Management</h2>
+    <div class="task-tabs">
+      <button class="active" onclick="showTaskTab('add')">Add Task</button>
+      <button onclick="showTaskTab('kanban')">Kanban</button>
+      <button onclick="showTaskTab('filters')">Filters</button>
+    </div>
+    <div id="taskContent">
+      <label for="taskName">Task Name:</label>
+      <input type="text" id="taskName" placeholder="Enter task name" />
+      <label for="taskProject">Project:</label>
+      <select id="taskProject">
+        <option value="">No Project</option>
+      </select>
+      <label for="taskPomodoros">Estimated Pomodoros:</label>
+      <input type="number" id="taskPomodoros" value="1" min="1" />
+      <label for="taskPriority">Priority:</label>
+      <select id="taskPriority">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <label for="taskCategory">Category:</label>
+      <input type="text" id="taskCategory" placeholder="Enter category" />
+      <label for="taskDeadline">Deadline:</label>
+      <input type="date" id="taskDeadline" />
+      <label for="taskNotes">Notes:</label>
+      <textarea id="taskNotes"></textarea>
+      <label for="saveTemplate">Save as Template:</label>
+      <input type="checkbox" id="saveTemplate" />
+    </div>
+    <button onclick="addTask()">Add Task</button>
+    <button onclick="closeTasksPopup()">Close</button>
+  </div>
+
+  <div id="collabPopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="collabTitle">
+    <h2 id="collabTitle">Collaboration</h2>
+    <div class="collab-tabs">
+      <button class="active" onclick="showCollabTab('team')">Team</button>
+      <button onclick="showCollabTab('chat')">Chat</button>
+      <button onclick="showCollabTab('leaderboard')">Leaderboard</button>
+    </div>
+    <div id="collabContent">
+      <label for="teamMember">Add Team Member:</label>
+      <input type="email" id="teamMember" placeholder="Enter email" />
+      <button onclick="addTeamMember()">Add</button>
+    </div>
+    <button onclick="closeCollabPopup()">Close</button>
+  </div>
+
+  <div id="integrationsPopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="integrationsTitle">
+    <h2 id="integrationsTitle">Integrations</h2>
+    <label for="integrationSelect">Select Integration:</label>
+    <select id="integrationSelect">
+      <option value="googleCalendar">Google Calendar</option>
+      <option value="todoist">Todoist</option>
+      <option value="trello">Trello</option>
+      <option value="slack">Slack</option>
+    </select>
+    <button onclick="connectIntegration()">Connect</button>
+    <button onclick="closeIntegrationsPopup()">Close</button>
+  </div>
+
+  <div id="gamificationPopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="gamificationTitle">
+    <h2 id="gamificationTitle">Achievements</h2>
+    <div id="gamificationContent">
+      <p>Points: <span id="userPoints">0</span></p>
+      <p>Level: <span id="userLevel">1</span></p>
+      <div id="badges"></div>
+    </div>
+    <button onclick="closeGamificationPopup()">Close</button>
+  </div>
+
+  <div class="mobile-widget" id="mobileWidget">
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseTimer()">Pause</button>
+  </div>
+
+  <script>
+    // Firebase Configuration (Replace with your Firebase project details)
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+      projectId: "YOUR_FIREBASE_PROJECT_ID",
+      storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_FIREBASE_SENDER_ID",
+      appId: "YOUR_FIREBASE_APP_ID"
+    };
+
+    // Initialize Firebase
+    try {
+      firebase.initializeApp(firebaseConfig);
+    } catch (error) {
+      console.error("Firebase initialization failed:", error);
+      alert("Failed to initialize Firebase. Please check your configuration.");
+    }
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const rtdb = firebase.database();
+
+    let timer;
+    let time = 1500; // Default Pomodoro time in seconds
+    let mode = "pomodoro";
+    let isRunning = false;
+    let isPaused = false;
+    let currentUser = null;
+    let currentTask = null;
+    let durations = { pomodoro: 25 * 60, short: 5 * 60, long: 15 * 60 };
+    let reminderInterval = 0;
+    let lastReminderTime = Date.now();
+    let projects = [];
+    let tasks = [];
+    let templates = [];
+    let timerPresets = [];
+    let teamMembers = [];
+    let points = 0;
+    let level = 1;
+    let badges = [];
+    let theme = { bg: "#0d1b2a", font: "Rubik", buttonColor: "#ffffff" };
+
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resumeBtn = document.getElementById("resumeBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const signOutBtn = document.getElementById("signOutBtn");
+    const googleSignInBtn = document.getElementById("googleSignInBtn");
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", () => {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          currentUser = { id: user.uid, name: user.displayName, picture: user.photoURL };
+          googleSignInBtn.style.display = "none";
+          document.getElementById("user-info").style.display = "flex";
+          document.getElementById("user-name").textContent = user.displayName;
+          document.getElementById("user-pic").src = user.photoURL;
+          signOutBtn.style.display = "block";
+          localStorage.setItem("hedberaUser", JSON.stringify(currentUser));
+          loadUserData();
+        } else {
+          currentUser = null;
+          googleSignInBtn.style.display = "flex";
+          googleSignInBtn.textContent = "Sign In";
+          googleSignInBtn.disabled = false;
+          document.getElementById("user-info").style.display = "none";
+          signOutBtn.style.display = "none";
+          localStorage.removeItem("hedberaUser");
+          loadUserData();
+        }
+        updateTotalTimeDisplay();
+        showDateTimeUsed();
+      });
+
+      googleSignInBtn.addEventListener("click", () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).then(() => {
+          googleSignInBtn.textContent = "Signed In";
+          googleSignInBtn.disabled = true;
+        }).catch((error) => {
+          console.error("Google Sign-In Error:", error);
+          alert(`Failed to sign in with Google: ${error.message}`);
+        });
+      });
+
+      const savedSettings = JSON.parse(localStorage.getItem("hedberaSettings"));
+      if (savedSettings) {
+        durations = savedSettings.durations;
+        reminderInterval = savedSettings.reminderInterval;
+        theme = savedSettings.theme || theme;
+        time = durations[mode];
+      }
+      updateTimerDisplay();
+      updateTotalTimeDisplay();
+      document.getElementById("dateSelect").value = getTodayKey();
+      showDateTimeUsed();
+      requestNotificationPermission();
+      initializeVoiceControl();
+      initializeOfflineSupport();
+      applyTheme();
+    });
+
+    function signOut() {
+      auth.signOut().then(() => {
+        currentUser = null;
+        googleSignInBtn.style.display = "flex";
+        googleSignInBtn.textContent = "Sign In";
+        googleSignInBtn.disabled = false;
+        document.getElementById("user-info").style.display = "none";
+        signOutBtn.style.display = "none";
+        localStorage.removeItem("hedberaUser");
+        updateTotalTimeDisplay();
+        showDateTimeUsed();
+      }).catch((error) => {
+        console.error("Sign Out Error:", error);
+        alert(`Failed to sign out: ${error.message}`);
+      });
+    }
+
+    function getTodayKey() {
+      const today = new Date();
+      return today.toISOString().split("T")[0]; // yyyy-mm-dd
+    }
+
+    function getMonthKey(date = new Date()) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; // yyyy-mm
+    }
+
+    function getYearKey(date = new Date()) {
+      return `${date.getFullYear()}`; // yyyy
+    }
+
+    function getWeekKey(date = new Date()) {
+      const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+      const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+      const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+      return `${date.getFullYear()}-W${String(weekNumber).padStart(2, "0")}`; // yyyy-Www
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(time / 60).toString().padStart(2, "0");
+      const seconds = (time % 60).toString().padStart(2, "0");
+      document.getElementById("timer").textContent = `${minutes}:${seconds}`;
+    }
+
+    function updateProgressCircle() {
+      const progress = document.getElementById("progress");
+      const total = durations[mode];
+      const offset = (time / total) * 283;
+      progress.style.strokeDashoffset = offset;
+    }
+
+    function updateTotalTimeDisplay() {
+      const allData = JSON.parse(localStorage.getItem("focusData")) || {};
+      const todayKey = getTodayKey();
+      const userKey = currentUser ? currentUser.id : "anonymous";
+      const userData = allData[userKey] || {};
+      const mins = Math.floor((userData[todayKey] || 0) / 60);
+      document.getElementById("total-time").textContent = `Focused Time Today: ${mins} min`;
+    }
+
+    // Timer Functions
+    function startTimer() {
+      if (isRunning) return;
+      isRunning = true;
+      isPaused = false;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = false;
+      updateProgressCircle();
+      timer = setInterval(() => {
+        time--;
+        updateTimerDisplay();
+        updateProgressCircle();
+        checkReminder();
+        if (time <= 0) {
+          clearInterval(timer);
+          playAlarm();
+          isRunning = false;
+          recordFocusTime(durations[mode]);
+          autoSwitchMode();
+          awardPoints(10);
+          vibrateDevice(200);
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (!isRunning || isPaused) return;
+      clearInterval(timer);
+      isRunning = false;
+      isPaused = true;
+      startBtn.disabled = true;
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = false;
+      stopBtn.disabled = false;
+      if (mode === "pomodoro") {
+        const used = durations.pomodoro - time;
+        recordFocusTime(used);
+      }
+      logPauseReason();
+    }
+
+    function resumeTimer() {
+      if (isRunning || !isPaused) return;
+      startTimer();
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
+      isRunning = false;
+      isPaused = false;
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = true;
+      time = durations[mode];
+      updateTimerDisplay();
+      updateProgressCircle();
+    }
+
+    function adjustTimer() {
+      const newTime = prompt("Enter new duration (minutes):");
+      if (newTime && !isNaN(newTime)) {
+        time = parseInt(newTime) * 60;
+        updateTimerDisplay();
+        updateProgressCircle();
+      }
+    }
+
+    function setMode(newMode) {
+      document.querySelectorAll(".mode-buttons button").forEach((btn) => btn.classList.remove("active"));
+      event.target.classList.add("active");
+      mode = newMode;
+      time = durations[newMode];
+      updateTimerDisplay();
+      updateProgressCircle();
+      stopTimer();
+    }
+
+    function autoSwitchMode() {
+      if (mode === "pomodoro") {
+        setMode("short");
+        startTimer();
+      } else {
+        setMode("pomodoro");
+        startTimer();
+      }
+    }
+
+    function loadTimerPreset() {
+      const presetId = document.getElementById("timerPreset").value;
+      const preset = timerPresets.find(p => p.id === presetId);
+      if (preset) {
+        durations = preset.durations;
+        time = durations[mode];
+        updateTimerDisplay();
+        updateProgressCircle();
+      }
+    }
+
+    function playAlarm() {
+      const alarm = document.getElementById("alarm");
+      alarm.play().catch((error) => console.warn("Audio playback failed:", error));
+    }
+
+    // Data Management
+    function loadUserData() {
+      if (currentUser) {
+        db.collection("projects").where("userId", "==", currentUser.id).get().then((snapshot) => {
+          projects = [];
+          snapshot.forEach((doc) => projects.push({ id: doc.id, ...doc.data() }));
+          updateProjectSelect();
+        }).catch((error) => console.error("Error loading projects:", error));
+
+        db.collection("tasks").where("userId", "==", currentUser.id).get().then((snapshot) => {
+          tasks = [];
+          snapshot.forEach((doc) => tasks.push({ id: doc.id, ...doc.data() }));
+          renderTasks();
+        }).catch((error) => console.error("Error loading tasks:", error));
+
+        db.collection("templates").where("userId", "==", currentUser.id).get().then((snapshot) => {
+          templates = [];
+          snapshot.forEach((doc) => templates.push({ id: doc.id, ...doc.data() }));
+        }).catch((error) => console.error("Error loading templates:", error));
+
+        db.collection("presets").where("userId", "==", currentUser.id).get().then((snapshot) => {
+          timerPresets = [];
+          snapshot.forEach((doc) => timerPresets.push({ id: doc.id, ...doc.data() }));
+          updatePresetSelect();
+        }).catch((error) => console.error("Error loading presets:", error));
+
+        db.collection("gamification").doc(currentUser.id).get().then((doc) => {
+          if (doc.exists) {
+            points = doc.data().points || 0;
+            level = doc.data().level || 1;
+            badges = doc.data().badges || [];
+          }
+        }).catch((error) => console.error("Error loading gamification data:", error));
+      } else {
+        projects = JSON.parse(localStorage.getItem("projects")) || [];
+        tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        templates = JSON.parse(localStorage.getItem("templates")) || [];
+        timerPresets = JSON.parse(localStorage.getItem("presets")) || [];
+        updateProjectSelect();
+        renderTasks();
+        updatePresetSelect();
+      }
+    }
+
+    function updateProjectSelect() {
+      const select = document.getElementById("taskProject");
+      select.innerHTML = '<option value="">No Project</option>';
+      projects.forEach((project) => {
+        const option = document.createElement("option");
+        option.value = project.id;
+        option.textContent = project.name;
+        select.appendChild(option);
+      });
+    }
+
+    function updatePresetSelect() {
+      const select = document.getElementById("timerPreset");
+      select.innerHTML = '<option value="">Select Preset</option>';
+      timerPresets.forEach((preset) => {
+        const option = document.createElement("option");
+        option.value = preset.id;
+        option.textContent = preset.name;
+        select.appendChild(option);
+      });
+    }
+
+    // Task Management
+    function addTask() {
+      const task = {
+        id: Date.now().toString(),
+        name: document.getElementById("taskName").value.trim(),
+        projectId: document.getElementById("taskProject").value,
+        pomodoros: parseInt(document.getElementById("taskPomodoros").value),
+        priority: document.getElementById("taskPriority").value,
+        category: document.getElementById("taskCategory").value,
+        deadline: document.getElementById("taskDeadline").value,
+        notes: document.getElementById("taskNotes").value,
+        completed: false,
+        timeSpent: 0,
+        date: getTodayKey(),
+        userId: currentUser ? currentUser.id : "anonymous",
+        subTasks: [],
+        tags: [],
+        order: tasks.length
+      };
+      if (!task.name) return;
+      tasks.push(task);
+      if (currentUser) {
+        db.collection("tasks").add(task).catch((error) => console.error("Error adding task:", error));
+      } else {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+      if (document.getElementById("saveTemplate").checked) {
+        const template = { ...task, id: Date.now().toString() };
+        templates.push(template);
+        if (currentUser) db.collection("templates").add(template).catch((error) => console.error("Error adding template:", error));
+        else localStorage.setItem("templates", JSON.stringify(templates));
+      }
+      renderTasks();
+      closeTasksPopup();
+      awardPoints(5);
+    }
+
+    function renderTasks() {
+      const taskList = document.getElementById("taskList");
+      taskList.innerHTML = "";
+      tasks.sort((a, b) => a.order - b.order).forEach((task) => {
+        const div = document.createElement("div");
+        div.className = `task-item ${task.completed ? "completed" : ""}`;
+        div.draggable = true;
+        div.id = task.id;
+        div.innerHTML = `
+          <span>${task.name} (${task.pomodoros} Pomodoros, ${task.priority}, ${task.category || "No Category"})</span>
+          <div>
+            <button onclick="toggleTask('${task.id}')">${task.completed ? "Undo" : "Complete"}</button>
+            <button onclick="deleteTask('${task.id}')">Delete</button>
+            <button onclick="addSubTask('${task.id}')">Add Sub-Task</button>
+          </div>
+        `;
+        taskList.appendChild(div);
+      });
+      setupDragAndDrop();
+    }
+
+    function toggleTask(id) {
+      const task = tasks.find((t) => t.id === id);
+      if (task) {
+        task.completed = !task.completed;
+        if (currentUser) {
+          db.collection("tasks").doc(id).update({ completed: task.completed }).catch((error) => console.error("Error updating task:", error));
+        } else {
+          localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+        renderTasks();
+      }
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter((t) => t.id !== id);
+      if (currentUser) {
+        db.collection("tasks").doc(id).delete().catch((error) => console.error("Error deleting task:", error));
+      } else {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+      renderTasks();
+    }
+
+    function addSubTask(id) {
+      const name = prompt("Enter sub-task name:");
+      if (!name) return;
+      const task = tasks.find((t) => t.id === id);
+      if (task) {
+        task.subTasks.push({ id: Date.now().toString(), name, completed: false });
+        if (currentUser) {
+          db.collection("tasks").doc(id).update({ subTasks: task.subTasks }).catch((error) => console.error("Error adding sub-task:", error));
+        } else {
+          localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+        renderTasks();
+      }
+    }
+
+    function showTaskTab(tab) {
+      document.querySelectorAll(".task-tabs button").forEach((btn) => btn.classList.remove("active"));
+      document.querySelector(`.task-tabs button[onclick="showTaskTab('${tab}')"]`).classList.add("active");
+      const content = document.getElementById("taskContent");
+      if (tab === "kanban") {
+        content.innerHTML = `
+          <div class="kanban-board">
+            <div class="kanban-column" id="todo"><h3>To Do</h3></div>
+            <div class="kanban-column" id="inProgress"><h3>In Progress</h3></div>
+            <div class="kanban-column" id="done"><h3>Done</h3></div>
+          </div>
+        `;
+        renderKanban();
+      } else if (tab === "filters") {
+        content.innerHTML = `
+          <label for="filterCategory">Filter by Category:</label>
+          <input type="text" id="filterCategory" />
+          <label for="filterPriority">Filter by Priority:</label>
+          <select id="filterPriority">
+            <option value="">All</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <button onclick="applyTaskFilters()">Apply</button>
+        `;
+      } else {
+        content.innerHTML = `
+          <label for="taskName">Task Name:</label>
+          <input type="text" id="taskName" placeholder="Enter task name" />
+          <label for="taskProject">Project:</label>
+          <select id="taskProject">
+            <option value="">No Project</option>
+          </select>
+          <label for="taskPomodoros">Estimated Pomodoros:</label>
+          <input type="number" id="taskPomodoros" value="1" min="1" />
+          <label for="taskPriority">Priority:</label>
+          <select id="taskPriority">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <label for="taskCategory">Category:</label>
+          <input type="text" id="taskCategory" placeholder="Enter category" />
+          <label for="taskDeadline">Deadline:</label>
+          <input type="date" id="taskDeadline" />
+          <label for="taskNotes">Notes:</label>
+          <textarea id="taskNotes"></textarea>
+          <label for="saveTemplate">Save as Template:</label>
+          <input type="checkbox" id="saveTemplate" />
+        `;
+        updateProjectSelect();
+      }
+    }
+
+    function renderKanban() {
+      const todo = document.getElementById("todo");
+      const inProgress = document.getElementById("inProgress");
+      const done = document.getElementById("done");
+      todo.innerHTML = "<h3>To Do</h3>";
+      inProgress.innerHTML = "<h3>In Progress</h3>";
+      done.innerHTML = "<h3>Done</h3>";
+
+      tasks.forEach((task) => {
+        const div = document.createElement("div");
+        div.className = "task-item";
+        div.draggable = true;
+        div.id = task.id;
+        div.textContent = task.name;
+        if (task.completed) {
+          done.appendChild(div);
+        } else if (task.inProgress) {
+          inProgress.appendChild(div);
+        } else {
+          todo.appendChild(div);
+        }
+      });
+
+      [todo, inProgress, done].forEach((column) => {
+        column.addEventListener("dragover", (e) => e.preventDefault());
+        column.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const id = e.dataTransfer.getData("text/plain");
+          const dragged = document.getElementById(id);
+          const task = tasks.find((t) => t.id === id);
+          if (task) {
+            task.inProgress = column.id === "inProgress";
+            task.completed = column.id === "done";
+            if (currentUser) {
+              db.collection("tasks").doc(id).update({ inProgress: task.inProgress, completed: task.completed }).catch((error) => console.error("Error updating task:", error));
+            } else {
+              localStorage.setItem("tasks", JSON.stringify(tasks));
+            }
+            column.appendChild(dragged);
+          }
+        });
+      });
+    }
+
+    function applyTaskFilters() {
+      const category = document.getElementById("filterCategory").value.trim().toLowerCase();
+      const priority = document.getElementById("filterPriority").value;
+      tasks = tasks.filter((task) => {
+        const matchesCategory = category ? task.category.toLowerCase().includes(category) : true;
+        const matchesPriority = priority ? task.priority === priority : true;
+        return matchesCategory && matchesPriority;
+      });
+      renderTasks();
+    }
+
+    function setupDragAndDrop() {
+      const taskList = document.getElementById("taskList");
+      taskList.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", e.target.id);
+      });
+      taskList.addEventListener("dragover", (e) => e.preventDefault());
+      taskList.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData("text/plain");
+        const dragged = document.getElementById(id);
+        const target = e.target.closest(".task-item");
+        if (target && dragged !== target) {
+          const allTasks = Array.from(taskList.children);
+          const fromIndex = allTasks.indexOf(dragged);
+          const toIndex = allTasks.indexOf(target);
+          tasks.splice(toIndex, 0, tasks.splice(fromIndex, 1)[0]);
+          tasks.forEach((task, i) => task.order = i);
+          if (currentUser) {
+            tasks.forEach((task) => {
+              db.collection("tasks").doc(task.id).update({ order: task.order }).catch((error) => console.error("Error updating task order:", error));
+            });
+          } else {
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+          }
+          renderTasks();
+        }
+      });
+    }
+
+    // Project Management
+    function addProject() {
+      const name = document.getElementById("projectName").value.trim();
+      if (!name) return;
+      const project = {
+        id: Date.now().toString(),
+        name,
+        userId: currentUser ? currentUser.id : "anonymous",
+        category: "",
+        deadline: "",
+        milestones: [],
+        budget: 0
+      };
+      projects.push(project);
+      if (currentUser) {
+        db.collection("projects").add(project).catch((error) => console.error("Error adding project:", error));
+      } else {
+        localStorage.setItem("projects", JSON.stringify(projects));
+      }
+      updateProjectSelect();
+      document.getElementById("projectName").value = "";
+    }
+
+    // Reporting
+    function showFocusBreakdown() {
+      document.getElementById("reportPopup").classList.add("open");
+      document.getElementById("overlay").classList.add("open");
+      showReportTab("summary");
+    }
+
+    function showReportTab(tab) {
+      document.querySelectorAll(".report-tabs button").forEach((btn) => btn.classList.remove("active"));
+      document.querySelector(`.report-tabs button[onclick="showReportTab('${tab}')"]`).classList.add("active");
+      const content = document.getElementById("reportContent");
+      content.innerHTML = "";
+      const userData = JSON.parse(localStorage.getItem("focusData"))?.[currentUser?.id || "anonymous"] || {};
+
+      if (tab === "summary") {
+        let totalHours = 0;
+        let daysAccessed = 0;
+        let streak = 0;
+        const today = new Date();
+        const dates = Object.keys(userData)
+          .filter((key) => key.includes("-") && !key.startsWith("month-") && !key.startsWith("year-"))
+          .sort();
+        dates.forEach((date) => {
+          totalHours += userData[date] / 3600;
+          daysAccessed++;
+        });
+
+        let currentDate = new Date();
+        while (dates.includes(currentDate.toISOString().split("T")[0])) {
+          streak++;
+          currentDate.setDate(currentDate.getDate() - 1);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.id = "focusChart";
+        content.appendChild(canvas);
+        new Chart(canvas.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: dates.slice(-7),
+            datasets: [{
+              label: "Focus Time (min)",
+              data: dates.slice(-7).map((date) => Math.floor(userData[date] / 60)),
+              backgroundColor: "rgba(119, 141, 169, 0.5)",
+              borderColor: "rgba(119, 141, 169, 1)",
+              borderWidth: 1
+            }]
+          },
+          options: { scales: { y: { beginAtZero: true } } }
+        });
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <tr><th>Project</th><th>Time Spent</th></tr>
+          ${projects.map((project) => {
+            const time = tasks
+              .filter((task) => task.projectId === project.id)
+              .reduce((sum, task) => sum + (task.timeSpent || 0), 0);
+            return `<tr><td>${project.name}</td><td>${Math.floor(time / 60)} min</td></tr>`;
+          }).join("")}
+          <tr><td>No Project</td><td>${Math.floor((userData[getTodayKey()] || 0) / 60)} min</td></tr>
+        `;
+        content.appendChild(table);
+
+        content.insertAdjacentHTML("afterbegin", `
+          <p>Total Hours Focused: ${totalHours.toFixed(1)} hr</p>
+          <p>Days Accessed: ${daysAccessed}</p>
+          <p>Current Streak: ${streak} days</p>
+        `);
+      } else if (tab === "detail") {
+        content.innerHTML = `
+          <table>
+            <tr><th>Date</th><th>Task/Project</th><th>Minutes</th></tr>
+            ${tasks.map((task) => `
+              <tr>
+                <td>${task.date || getTodayKey()}</td>
+                <td>${task.name} (${projects.find((p) => p.id === task.projectId)?.name || "No Project"})</td>
+                <td>${Math.floor((task.timeSpent || 0) / 60)}</td>
+              </tr>
+            `).join("")}
+          </table>
+          <button onclick="addManualSession()">Add Manual Session</button>
+        `;
+      } else if (tab === "ranking") {
+        const leaderboard = [
+          { name: "User1", time: 600 },
+          { name: currentUser?.name || "You", time: userData[getTodayKey()] / 60 || 0 }
+        ].sort((a, b) => b.time - a.time).slice(0, 16);
+        content.innerHTML = `
+          <table>
+            <tr><th>Rank</th><th>User</th><th>Time (min)</th></tr>
+            ${leaderboard.map((user, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td>${user.name}</td>
+                <td>${Math.floor(user.time)}</td>
+              </tr>
+            `).join("")}
+          </table>
+        `;
+      } else if (tab === "heatmap") {
+        const canvas = document.createElement("canvas");
+        canvas.id = "heatmapChart";
+        content.appendChild(canvas);
+        new Chart(canvas.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            datasets: [{
+              label: "Focus Time (min)",
+              data: [120, 150, 100, 130, 140, 90, 110],
+              backgroundColor: "rgba(119, 141, 169, 0.5)",
+            }],
+          },
+          options: { scales: { y: { beginAtZero: true } } },
+        });
+      } else if (tab === "trends") {
+        content.innerHTML = "<p>Trends analysis coming soon!</p>";
+      }
+    }
+
+    function addManualSession() {
+      const date = prompt("Enter session date (yyyy-mm-dd):");
+      const minutes = parseInt(prompt("Enter duration in minutes:"));
+      if (date && minutes) {
+        const data = JSON.parse(localStorage.getItem("focusData")) || {};
+        const userKey = currentUser ? currentUser.id : "anonymous";
+        if (!data[userKey]) data[userKey] = {};
+        data[userKey][date] = (data[userKey][date] || 0) + minutes * 60;
+        localStorage.setItem("focusData", JSON.stringify(data));
+        if (currentUser) {
+          db.collection("focusData").add({
+            userId: currentUser.id,
+            date,
+            duration: minutes * 60,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          }).catch((error) => console.error("Error adding manual session:", error));
+        }
+        showReportTab("detail");
+      }
+    }
+
+    function exportReport(format) {
+      const data = JSON.parse(localStorage.getItem("focusData")) || {};
+      const userKey = currentUser ? currentUser.id : "anonymous";
+      const userData = data[userKey] || {};
+      if (format === "csv") {
+        let csv = "Date,Task/Project,Minutes\n";
+        tasks.forEach((task) => {
+          csv += `${task.date || getTodayKey()},${task.name} (${projects.find((p) => p.id === task.projectId)?.name || "No Project"}),${Math.floor((task.timeSpent || 0) / 60)}\n`;
+        });
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "focus_data.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (format === "pdf") {
+        alert("PDF export is not implemented yet.");
+      }
+    }
+
+    function recordFocusTime(seconds) {
+      if (mode !== "pomodoro") return;
+
+      const todayKey = getTodayKey();
+      const monthKey = getMonthKey();
+      const yearKey = getYearKey();
+      const userKey = currentUser ? currentUser.id : "anonymous";
+
+      let data = JSON.parse(localStorage.getItem("focusData")) || {};
+      if (!data[userKey]) data[userKey] = {};
+      data[userKey][todayKey] = (data[userKey][todayKey] || 0) + seconds;
+
+      const storedMonth = localStorage.getItem("lastMonthKey");
+      if (storedMonth && storedMonth !== monthKey) {
+        let monthTotal = 0;
+        for (const key in data[userKey]) {
+          if (key.startsWith(storedMonth)) {
+            monthTotal += data[userKey][key];
+            delete data[userKey][key];
+          }
+        }
+        data[userKey][`month-${storedMonth}`] = monthTotal;
+      }
+      localStorage.setItem("lastMonthKey", monthKey);
+
+      const storedYear = localStorage.getItem("lastYearKey");
+      if (storedYear && storedYear !== yearKey) {
+        let yearTotal = 0;
+        for (const key in data[userKey]) {
+          if (key.startsWith(`month-${storedYear}`)) {
+            yearTotal += data[userKey][key];
+            delete data[userKey][key];
+          }
+        }
+        data[userKey][`year-${storedYear}`] = yearTotal;
+      }
+      localStorage.setItem("lastYearKey", yearKey);
+      localStorage.setItem("focusData", JSON.stringify(data));
+
+      if (currentUser) {
+        const session = {
+          userId: currentUser.id,
+          date: todayKey,
+          duration: seconds,
+          taskId: currentTask ? currentTask.id : null,
+          projectId: currentTask ? currentTask.projectId : null,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        db.collection("focusData").add(session).catch((error) => console.error("Error saving focus data:", error));
+      }
+
+      if (currentTask) {
+        currentTask.timeSpent = (currentTask.timeSpent || 0) + seconds;
+        if (currentUser) {
+          db.collection("tasks").doc(currentTask.id).update({ timeSpent: currentTask.timeSpent }).catch((error) => console.error("Error updating task time:", error));
+        } else {
+          localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+      }
+
+      updateTotalTimeDisplay();
+    }
+
+    function showDateTimeUsed() {
+      const dateInput = document.getElementById("dateSelect").value;
+      const data = JSON.parse(localStorage.getItem("focusData")) || {};
+      const userKey = currentUser ? currentUser.id : "anonymous";
+      const userData = data[userKey] || {};
+      const mins = Math.floor((userData[dateInput] || 0) / 60);
+      document.getElementById("date-time").textContent = `Focus Time on ${dateInput}: ${mins} min`;
+    }
+
+    // Settings
+    function openSettings() {
+      document.getElementById("pomodoroDuration").value = durations.pomodoro / 60;
+      document.getElementById("shortBreakDuration").value = durations.short / 60;
+      document.getElementById("longBreakDuration").value = durations.long / 60;
+      document.getElementById("reminderInterval").value = reminderInterval / 60;
+      document.getElementById("settingsPopup").classList.add("open");
+      document.getElementById("overlay").classList.add("open");
+    }
+
+    function showSettingsTab(tab) {
+      document.querySelectorAll(".settings-tabs button").forEach((btn) => btn.classList.remove("active"));
+      document.querySelector(`.settings-tabs button[onclick="showSettingsTab('${tab}')"]`).classList.add("active");
+      const content = document.getElementById("settingsContent");
+      if (tab === "theme") {
+        document.querySelector(".theme-editor").style.display = "block";
+        document.querySelector(".accessibility-checker").style.display = "none";
+      } else if (tab === "accessibility") {
+        document.querySelector(".theme-editor").style.display = "none";
+        document.querySelector(".accessibility-checker").style.display = "block";
+      } else {
+        document.querySelector(".theme-editor").style.display = "none";
+        document.querySelector(".accessibility-checker").style.display = "none";
+      }
+    }
+
+    function saveSettings() {
+      durations.pomodoro = parseInt(document.getElementById("pomodoroDuration").value) * 60;
+      durations.short = parseInt(document.getElementById("shortBreakDuration").value) * 60;
+      durations.long = parseInt(document.getElementById("longBreakDuration").value) * 60;
+      reminderInterval = parseInt(document.getElementById("reminderInterval").value) * 60;
+      theme.bg = document.getElementById("themeBg")?.value || theme.bg;
+      theme.font = document.getElementById("themeFont")?.value || theme.font;
+      localStorage.setItem("hedberaSettings", JSON.stringify({ durations, reminderInterval, theme }));
+      time = durations[mode];
+      updateTimerDisplay();
+      applyTheme();
+      closeSettingsPopup();
+    }
+
+    function applyTheme() {
+      document.documentElement.style.setProperty("--theme-bg", theme.bg);
+      document.documentElement.style.setProperty("--theme-font", theme.font);
+      document.documentElement.style.setProperty("--theme-button-color", theme.buttonColor);
+    }
+
+    // Collaboration
+    function openCollaboration() {
+      document.getElementById("collabPopup").classList.add("open");
+      document.getElementById("overlay").classList.add("open");
+    }
+
+    function showCollabTab(tab) {
+      document.querySelectorAll(".collab-tabs button").forEach((btn) => btn.classList.remove("active"));
+      document.querySelector(`.collab-tabs button[onclick="showCollabTab('${tab}')"]`).classList.add("active");
+      const content = document.getElementById("collabContent");
+      if (tab === "chat") {
+        content.innerHTML = `<div id="chatMessages"></div><input type="text" id="chatInput" /><button onclick="sendChat()">Send</button>`;
+        loadChat();
+      } else if (tab === "leaderboard") {
+        content.innerHTML = "<p>Leaderboard coming soon!</p>";
+      } else {
+        content.innerHTML = `
+          <label for="teamMember">Add Team Member:</label>
+          <input type="email" id="teamMember" placeholder="Enter email" />
+          <button onclick="addTeamMember()">Add</button>
+        `;
+      }
+    }
+
+    function addTeamMember() {
+      const email = document.getElementById("teamMember").value.trim();
+      if (!email) return;
+      teamMembers.push({ email });
+      if (currentUser) {
+        db.collection("teams").add({ userId: currentUser.id, email }).catch((error) => console.error("Error adding team member:", error));
+      }
+      document.getElementById("teamMember").value = "";
+    }
+
+    function sendChat() {
+      const message = document.getElementById("chatInput").value.trim();
+      if (!message || !currentUser) return;
+      rtdb.ref("chat").push({ userId: currentUser.id, message, timestamp: Date.now() });
+      document.getElementById("chatInput").value = "";
+    }
+
+    function loadChat() {
+      rtdb.ref("chat").on("value", (snapshot) => {
+        const messages = snapshot.val();
+        const chatDiv = document.getElementById("chatMessages");
+        chatDiv.innerHTML = "";
+        if (messages) {
+          for (const key in messages) {
+            chatDiv.innerHTML += `<p>${messages[key].message}</p>`;
+          }
+        }
+      });
+    }
+
+    // Integrations
+    function openIntegrations() {
+      document.getElementById("integrationsPopup").classList.add("open");
+      document.getElementById("overlay").classList.add("open");
+    }
+
+    function connectIntegration() {
+      const integration = document.getElementById("integrationSelect").value;
+      alert(`Connecting to ${integration}`);
+      // Placeholder for OAuth/API integration
+    }
+
+    // Gamification
+    function openGamification() {
+      document.getElementById("gamificationPopup").classList.add("open");
+      document.getElementById("overlay").classList.add("open");
+      document.getElementById("userPoints").textContent = points;
+      document.getElementById("userLevel").textContent = level;
+      const badgesDiv = document.getElementById("badges");
+      badgesDiv.innerHTML = badges.map(b => `<p>${b}</p>`).join("");
+    }
+
+    function awardPoints(amount) {
+      points += amount;
+      if (points >= level * 100) {
+        level++;
+        badges.push(`Level ${level} Achieved`);
+      }
+      if (currentUser) {
+        db.collection("gamification").doc(currentUser.id).set({ points, level, badges }, { merge: true }).catch((error) => console.error("Error updating gamification data:", error));
+      }
+    }
+
+    // Accessibility
+    function runAccessibilityCheck() {
+      const issues = [];
+      if (!document.querySelectorAll("img[alt]").length) issues.push("Missing alt text on images.");
+      if (!document.querySelectorAll("button[aria-label]").length) issues.push("Missing aria-labels on buttons.");
+      alert(`Accessibility check complete. Issues found: ${issues.length ? issues.join(" ") : "None"}`);
+    }
+
+    // Mobile Features
+    function vibrateDevice(duration) {
+      if (navigator.vibrate) navigator.vibrate(duration);
+    }
+
+    function initializeOfflineSupport() {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch((error) => console.error("Service Worker registration failed:", error));
+      }
+    }
+
+    // Voice Control
+    function initializeVoiceControl() {
+      if ("webkitSpeechRecognition" in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.onresult = (event) => {
+          const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          if (command.includes("start timer")) startTimer();
+          else if (command.includes("pause timer")) pauseTimer();
+          else if (command.includes("add task")) openTasks();
+        };
+        recognition.onerror = (event) => console.error("Speech recognition error:", event.error);
+        recognition.start();
+      }
+    }
+
+    function requestNotificationPermission() {
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+    }
+
+    function checkReminder() {
+      if (reminderInterval === 0 || !isRunning) return;
+      const now = Date.now();
+      if ((now - lastReminderTime) / 1000 >= reminderInterval) {
+        if (Notification.permission === "granted") {
+          new Notification("Hedbera Timer Reminder", {
+            body: "Keep focused! Take a break if needed.",
+            icon: "/Elements/Logo.png"
+          });
+        }
+        lastReminderTime = now;
+      }
+    }
+
+    function logPauseReason() {
+      const reason = prompt("Why did you pause the timer?");
+      if (reason && currentUser) {
+        db.collection("pauseLogs").add({
+          userId: currentUser.id,
+          reason,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch((error) => console.error("Error logging pause reason:", error));
+      }
+    }
+
+    // Close Popups
+    function closeReportPopup() { document.getElementById("reportPopup").classList.remove("open"); document.getElementById("overlay").classList.remove("open"); }
+    function closeSettingsPopup() { document.getElementById("settingsPopup").classList.remove("open"); document.getElementById("overlay").classList.remove("open"); }
+    function closeTasksPopup() { document.getElementById("tasksPopup").classList.remove("open"); document.getElementById("overlay").classList.remove("open"); }
+    function closeCollabPopup() { document.getElementById("collabPopup").classList.remove("open"); document.getElementById("overlay").classList.remove("open"); }
+    function closeIntegrationsPopup() { document.getElementById("integrationsPopup").classList.remove("open"); document.getElementById("overlay").classList.remove("open"); }
+    function closeGamificationPopup() { document.getElementById("gamificationPopup").classList.remove("open"); document.getElementById("overlay").classList.remove("open"); }
+  </script>
+</body>
+</html>
